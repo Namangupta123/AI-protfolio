@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useChat } from "@ai-sdk/react";
-import { TextStreamChatTransport, UIMessage, type TextUIPart } from "ai";
+import { TextStreamChatTransport, UIMessage } from "ai";
 import { motion, AnimatePresence } from "framer-motion";
 import { Braces, Github, Linkedin, Mail } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -17,7 +17,7 @@ const WELCOME: UIMessage = {
       type: "text",
       text: "Hey there! 👋 I'm Naman's AI assistant. Ask me anything about his skills, projects, or experience — I'll do my best to help you get to know him.",
       state: "done",
-    } satisfies TextUIPart,
+    },
   ],
 };
 
@@ -36,17 +36,17 @@ const SUGGESTION_CHIPS = [
 
 export default function Home() {
   const [input, setInput] = useState("");
-  const [hasChat, setHasChat] = useState(false);
 
   const { messages, sendMessage, status, error, regenerate } = useChat({
     transport: new TextStreamChatTransport({ api: "/api/chat" }),
     messages: [WELCOME],
   });
 
+  const hasChat = messages.length > 1;
+
   function submit(text: string) {
     const trimmed = text.trim();
     if (!trimmed || status === "submitted" || status === "streaming") return;
-    setHasChat(true);
     sendMessage({ text: trimmed });
     setInput("");
   }
@@ -114,6 +114,7 @@ export default function Home() {
                 {SUGGESTION_CHIPS.map((chip, i) => (
                   <motion.button
                     key={chip}
+                    type="button"
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: 0.15 + i * 0.06 }}
