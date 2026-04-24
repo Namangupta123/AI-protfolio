@@ -75,7 +75,7 @@
   background: hsl(var(--muted-foreground));
 }
 
-/* Gradient utilities */
+/* Gradient utilities — fixed brand colors, intentionally theme-invariant */
 .gradient-text {
   background: linear-gradient(135deg, #7C3AED 0%, #EC4899 100%);
   -webkit-background-clip: text;
@@ -89,5 +89,5 @@
 
 /* Subtle glow for the bottom input on focus */
 .input-glow:focus-within {
-  box-shadow: 0 0 0 2px hsl(262 83% 58% / 0.3);
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.3);
 }
