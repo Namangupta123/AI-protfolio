@@ -8,6 +8,7 @@ import { Braces, Github, Linkedin, Mail } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { MessageList } from "@/components/chat/MessageList";
 import { BottomBar } from "@/components/chat/BottomBar";
+import { BookACallButton } from "@/components/BookACallButton";
 
 const WELCOME: UIMessage = {
   id: "welcome",
@@ -147,6 +148,8 @@ export default function Home() {
         onSubmit={handleSubmit}
         disabled={isDisabled}
       />
+
+      <BookACallButton />
     </div>
   );
 }
