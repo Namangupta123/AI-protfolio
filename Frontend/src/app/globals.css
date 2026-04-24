@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 3%;
+    --foreground: 210 40% 95%;
+    --card: 0 0% 6%;
+    --card-foreground: 210 40% 95%;
+    --popover: 0 0% 6%;
+    --popover-foreground: 210 40% 95%;
+    --primary: 199 89% 48%;
+    --primary-foreground: 0 0% 3%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 210 40% 95%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 215 20% 55%;
+    --accent: 199 89% 48%;
+    --accent-foreground: 0 0% 3%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 210 40% 95%;
+    --border: 0 0% 14%;
+    --input: 0 0% 10%;
+    --ring: 199 89% 48%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/* Glow utilities */
+.glow-border {
+  box-shadow: 0 0 0 1px hsl(var(--border)),
+              0 0 20px -4px hsl(var(--primary) / 0.15);
+}
+
+.glow-border:focus-within {
+  box-shadow: 0 0 0 1px hsl(var(--primary) / 0.4),
+              0 0 24px -4px hsl(var(--primary) / 0.25);
+  transition: box-shadow 0.2s ease;
+}

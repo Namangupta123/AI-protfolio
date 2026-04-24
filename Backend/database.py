@@ -1,0 +1,33 @@
+import os
+from supabase import create_client, Client
+from dotenv import load_dotenv
+
+load_dotenv()
+
+_client: Client | None = None
+
+
+def get_supabase() -> Client:
+    global _client
+    if _client is None:
+        url = os.environ["SUPABASE_URL"]
+        key = os.environ["SUPABASE_SERVICE_KEY"]
+        _client = create_client(url, key)
+    return _client
+
+
+def insert_document(content: str, embedding: list[float]) -> None:
+    client = get_supabase()
+    client.table("documents").insert({
+        "content": content,
+        "embedding": embedding,
+    }).execute()
+
+
+def match_documents(query_embedding: list[float], top_k: int = 5) -> list[str]:
+    client = get_supabase()
+    result = client.rpc("match_documents", {
+        "query_embedding": query_embedding,
+        "match_count": top_k,
+    }).execute()
+    return [row["content"] for row in result.data]
