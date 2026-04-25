@@ -9,7 +9,7 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mon
 export const metadata: Metadata = {
   title: "Naman Gupta — AI Portfolio",
   description:
-    "Ask me anything about Naman's skills, experience, and projects — powered by Groq AI.",
+    "Ask me anything about Naman's skills, experience, and projects.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

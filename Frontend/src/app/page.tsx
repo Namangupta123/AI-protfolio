@@ -2,25 +2,13 @@
 
 import { useState } from "react";
 import { useChat } from "@ai-sdk/react";
-import { TextStreamChatTransport, UIMessage } from "ai";
+import { TextStreamChatTransport } from "ai";
 import { motion, AnimatePresence } from "framer-motion";
 import { Braces, Github, Linkedin, Mail } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { MessageList } from "@/components/chat/MessageList";
 import { BottomBar } from "@/components/chat/BottomBar";
 import { BookACallButton } from "@/components/BookACallButton";
-
-const WELCOME: UIMessage = {
-  id: "welcome",
-  role: "assistant",
-  parts: [
-    {
-      type: "text",
-      text: "Hey there! 👋 I'm Naman's AI assistant. Ask me anything about his skills, projects, or experience — I'll do my best to help you get to know him.",
-      state: "done",
-    },
-  ],
-};
 
 const SOCIAL_LINKS = [
   { icon: Github, label: "GitHub", href: "https://github.com/Namangupta123" },
@@ -40,10 +28,9 @@ export default function Home() {
 
   const { messages, sendMessage, status, error, regenerate } = useChat({
     transport: new TextStreamChatTransport({ api: "/api/chat" }),
-    messages: [WELCOME],
   });
 
-  const hasChat = messages.length > 1;
+  const hasChat = messages.length > 0;
 
   function submit(text: string) {
     const trimmed = text.trim();

@@ -2,6 +2,7 @@
 Run this script once to ingest knowledge_base.md into Supabase.
 Usage: python ingest.py
 """
+import time
 from pathlib import Path
 from langchain_text_splitters import MarkdownHeaderTextSplitter
 from database import insert_document
@@ -35,6 +36,7 @@ def ingest(path: str = "knowledge_base.md") -> None:
         embedding = embed(chunk)
         insert_document(chunk, embedding)
         print(f"  [{i + 1}/{len(final_chunks)}] stored: {chunk[:60].strip()!r}")
+        time.sleep(0.5)
 
     print("Done. All chunks stored in Supabase.")
 

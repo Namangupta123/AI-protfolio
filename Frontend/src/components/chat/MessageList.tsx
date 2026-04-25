@@ -59,7 +59,7 @@ export function MessageList({ messages, status, error, regenerate }: MessageList
           >
             <span className="flex items-center gap-1.5">
               <AlertCircle className="w-3.5 h-3.5" />
-              Could not reach the AI backend. Is FastAPI running on port 8000?
+              Something went wrong. Please try again after some time.
             </span>
             <button
               onClick={regenerate}
