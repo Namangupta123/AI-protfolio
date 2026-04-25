@@ -1,6 +1,6 @@
 "use client";
 
-import { UIMessage, isTextUIPart, type TextUIPart } from "ai";
+import { UIMessage, isTextUIPart } from "ai";
 import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bot, User, AlertCircle, RefreshCw } from "lucide-react";
@@ -13,9 +13,10 @@ interface MessageListProps {
   status: string;
   error: Error | undefined;
   regenerate: () => void;
+  timestamps: Record<string, number>;
 }
 
-export function MessageList({ messages, status, error, regenerate }: MessageListProps) {
+export function MessageList({ messages, status, error, regenerate, timestamps }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const isWaiting = status === "submitted";
   const isStreaming = status === "streaming";
@@ -41,7 +42,7 @@ export function MessageList({ messages, status, error, regenerate }: MessageList
         <div className="flex flex-col gap-4 sm:gap-6 max-w-2xl mx-auto" aria-live="polite" aria-atomic="false">
           <AnimatePresence initial={false}>
             {messages.map((msg) => (
-              <ChatBubble key={msg.id} message={msg} />
+              <ChatBubble key={msg.id} message={msg} timestamp={timestamps[msg.id]} />
             ))}
             {isWaiting && <TypingIndicator key="typing" />}
           </AnimatePresence>
@@ -75,7 +76,16 @@ export function MessageList({ messages, status, error, regenerate }: MessageList
   );
 }
 
-function ChatBubble({ message }: { message: UIMessage }) {
+function formatTimestamp(ts: number): string {
+  return new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZoneName: "short",
+  }).format(new Date(ts));
+}
+
+function ChatBubble({ message, timestamp }: { message: UIMessage; timestamp?: number }) {
   const isUser = message.role === "user";
   const textParts = message.parts.filter(isTextUIPart);
 
@@ -85,7 +95,7 @@ function ChatBubble({ message }: { message: UIMessage }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className={`flex items-end gap-3 ${isUser ? "flex-row-reverse" : "flex-row"}`}
+      className={`group flex items-end gap-3 ${isUser ? "flex-row-reverse" : "flex-row"}`}
     >
       <div
         className={`shrink-0 flex items-center justify-center w-7 h-7 rounded-full border ${
@@ -156,6 +166,12 @@ function ChatBubble({ message }: { message: UIMessage }) {
           ))
         )}
       </div>
+
+      {timestamp && (
+        <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-[10px] text-muted-foreground whitespace-nowrap self-end pb-0.5">
+          {formatTimestamp(timestamp)}
+        </span>
+      )}
     </motion.div>
   );
 }
