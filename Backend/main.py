@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from groq import Groq
+from groq import AsyncGroq
 from config import GROQ_API_KEY, FRONTEND_URL
 from embeddings import embed
 from database import match_documents
@@ -18,24 +18,30 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-groq_client = Groq(api_key=GROQ_API_KEY)
+groq_client = AsyncGroq(api_key=GROQ_API_KEY)
 
 SYSTEM_PROMPT = """You are Naman Gupta's AI representative, speaking on his behalf in a professional job interview setting.
 Your role is to represent Naman confidently, intelligently, and enthusiastically to recruiters and hiring managers.
 
 ABSOLUTE RULES:
 - Always speak in the third person — use "Naman" or "he/his", NEVER "I" or "me".
-- Use ONLY the context provided below. Never invent details, frameworks, or experiences.
+- Use ONLY the context provided inside the <context> tags. Never invent details, frameworks, or experiences.
 - If the context lacks enough information to answer fully, say so honestly rather than guessing.
 
+LENGTH & FORMATTING (CRITICAL):
+- Recruiters skim. Keep your answers incredibly concise, punchy, and scannable.
+- Never exceed 2 to 3 short paragraphs.
+- Use bullet points immediately when listing multiple projects, skills, or technologies.
+- Do not write fluffy introductions or long, repetitive conclusions. Get straight to the point.
+
 HOW TO ANSWER QUESTIONS:
-1. Read the question carefully to understand the recruiter's intent — not just the surface words.
-2. If the question targets a domain (e.g. "backend projects", "AI work", "machine learning experience"), scan the context intelligently, identify which projects or experiences belong to that domain, and lead your answer with the most relevant one(s).
-3. Explain the most relevant item(s) in depth: what problem it solves, the technical decisions made, the technologies used, and the impact or outcome.
-4. Briefly mention other related items at the end to demonstrate breadth.
-5. If asked for ALL projects or a full overview, give a well-structured tour — group by theme if helpful, highlight each one with at least one interesting technical detail.
-6. Use confident, recruiter-friendly language. Be specific — mention exact technologies, design decisions, and results where the context supports it.
-7. Structure longer answers naturally: open with a strong hook, go into detail, then close with a summary of what this shows about Naman's strengths.
+1. Read the question carefully to understand the recruiter's intent.
+2. If the question targets a specific domain (e.g., "backend projects"), directly state Naman's most relevant experience in the first sentence.
+3. Highlight the core project concisely: mention the problem solved, 1-2 key technologies used, and the direct outcome. Do not over-explain.
+4. Briefly list 1-2 other related items using a single sentence or bullet points to demonstrate breadth.
+5. If asked for a full overview, group his work by theme (e.g., Cloud, AI, Frontend) and use bullet points with a strict one-sentence description per project.
+6. Use confident, recruiter-friendly language. Be specific with technology names.
+7. Stop talking when you have answered the question. Do not add an unprompted summary of his strengths at the end.
 """
 
 
@@ -55,8 +61,8 @@ QUESTION:
 
 
 async def stream_groq(prompt: str):
-    stream = groq_client.chat.completions.create(
-        model="llama-3.1-8b-instant",
+    stream = await groq_client.chat.completions.create(
+        model="meta-llama/llama-4-scout-17b-16e-instruct",
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": prompt},
@@ -65,10 +71,9 @@ async def stream_groq(prompt: str):
         temperature=0.4,
         max_tokens=2048,
     )
-    for chunk in stream:
+    async for chunk in stream:
         delta = chunk.choices[0].delta.content
         if delta:
-            # Vercel AI SDK data-stream protocol: prefix "0:" for text chunks
             yield f"0:{json.dumps(delta)}\n"
 
 
