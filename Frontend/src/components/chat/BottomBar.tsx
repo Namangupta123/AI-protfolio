@@ -2,6 +2,7 @@
 
 import { ArrowUp } from "lucide-react";
 
+const RESUME_URL = process.env.NEXT_PUBLIC_RESUME_URL;
 interface BottomBarProps {
   input: string;
   setInput: (v: string) => void;
@@ -38,7 +39,7 @@ export function BottomBar({ input, setInput, onSubmit, disabled }: BottomBarProp
         <p className="text-center text-xs text-muted-foreground mt-2">
           Answers based on resume and work history.{" "}
           <a
-            href="https://drive.google.com/file/d/1ovTHPiSxHl8YzGgfdSJ0SszQDCfb_Vcu/view?usp=sharing"
+            href={RESUME_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="text-violet-500 hover:text-violet-600 dark:hover:text-violet-400 transition-colors"

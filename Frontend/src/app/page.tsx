@@ -10,10 +10,14 @@ import { MessageList } from "@/components/chat/MessageList";
 import { BottomBar } from "@/components/chat/BottomBar";
 import { BookACallButton } from "@/components/BookACallButton";
 
+const GITHUB_URL = process.env.NEXT_PUBLIC_GITHUB_URL;
+const LINKEDIN_URL = process.env.NEXT_PUBLIC_LINKEDIN_URL;
+const MAIL_URL = process.env.NEXT_PUBLIC_MAIL_URL;
+
 const SOCIAL_LINKS = [
-  { icon: Github, label: "GitHub", href: "https://github.com/Namangupta123" },
-  { icon: Linkedin, label: "LinkedIn", href: "https://www.linkedin.com/in/naman-gupta-cse" },
-  { icon: Mail, label: "Email", href: "mailto:namanguptacse0330@gmail.com" },
+  { icon: Github, label: "GitHub", href: GITHUB_URL },
+  { icon: Linkedin, label: "LinkedIn", href: LINKEDIN_URL },
+  { icon: Mail, label: "Email", href: MAIL_URL },
 ];
 
 const SUGGESTION_CHIPS = [

@@ -7,7 +7,7 @@ import {
   DETECTION_PRESETS,
 } from "@llm-guardrails/core";
 
-const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8000";
+const BACKEND_URL = process.env.BACKEND_URL;
 
 const BLOCKED_MESSAGE =
   "I'm Naman's professional portfolio assistant. I can only answer questions about his skills, experience, and projects. Please keep your question on topic.";
