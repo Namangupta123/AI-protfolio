@@ -8,7 +8,7 @@ Frontend/node_modules/
 Frontend/dist/
 .idea/
 .DS_Store
-Frontend/.env
+Frontend/.env.local
 Backend/.env
 Frontend/.vscode/
 Backend/.vscode/

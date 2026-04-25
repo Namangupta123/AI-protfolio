@@ -6,7 +6,7 @@ import { CalendarDays } from "lucide-react";
 export function BookACallButton() {
   return (
     <motion.a
-      href="https://cal.com/naman-gupta/quick-chat"
+      href={process.env.NEXT_PUBLIC_CAL_URL}
       target="_blank"
       rel="noopener noreferrer"
       initial={{ opacity: 0, y: 20 }}
