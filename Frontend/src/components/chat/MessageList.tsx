@@ -37,8 +37,8 @@ export function MessageList({ messages, status, error, regenerate }: MessageList
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
-      <ScrollArea className="flex-1 px-4 py-6">
-        <div className="flex flex-col gap-6 max-w-2xl mx-auto" aria-live="polite" aria-atomic="false">
+      <ScrollArea className="flex-1 px-3 sm:px-4 py-4 sm:py-6">
+        <div className="flex flex-col gap-4 sm:gap-6 max-w-2xl mx-auto" aria-live="polite" aria-atomic="false">
           <AnimatePresence initial={false}>
             {messages.map((msg) => (
               <ChatBubble key={msg.id} message={msg} />
@@ -98,7 +98,7 @@ function ChatBubble({ message }: { message: UIMessage }) {
       </div>
 
       <div
-        className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+        className={`max-w-[90%] sm:max-w-[80%] px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl text-sm leading-relaxed ${
           isUser
             ? "gradient-bg text-white rounded-br-sm"
             : "bg-secondary text-foreground rounded-bl-sm border border-border"

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { TextStreamChatTransport } from "ai";
 import { motion, AnimatePresence } from "framer-motion";
-import { Braces, Github, Linkedin, Mail } from "lucide-react";
+import { Braces, CalendarDays, Github, Linkedin, Mail } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { MessageList } from "@/components/chat/MessageList";
 import { BottomBar } from "@/components/chat/BottomBar";
@@ -53,7 +53,7 @@ export default function Home() {
         initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="flex items-center justify-between px-6 py-4 border-b border-border sticky top-0 bg-background/80 backdrop-blur-md z-10"
+        className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b border-border sticky top-0 bg-background/80 backdrop-blur-md z-10"
       >
         <div className="flex items-center gap-2 font-mono text-sm font-medium">
           <Braces className="w-4 h-4 text-violet-500" />
@@ -72,12 +72,21 @@ export default function Home() {
               <Icon className="w-4 h-4" />
             </a>
           ))}
+          <a
+            href={process.env.NEXT_PUBLIC_CAL_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Book a Call"
+            className="[@media(min-width:965px)]:hidden text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <CalendarDays className="w-4 h-4" />
+          </a>
           <ThemeToggle />
         </nav>
       </motion.header>
 
       {/* Main content */}
-      <main className="flex-1 flex flex-col pb-28 overflow-hidden">
+      <main className="flex-1 flex flex-col pb-32 sm:pb-28 overflow-hidden">
         {/* Hero — empty state */}
         <AnimatePresence>
           {!hasChat && (
@@ -87,18 +96,18 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20, transition: { duration: 0.25 } }}
               transition={{ duration: 0.4 }}
-              className="flex flex-col items-center justify-center flex-1 text-center px-6 gap-8"
+              className="flex flex-col items-center justify-center flex-1 text-center px-4 sm:px-6 gap-6 sm:gap-8"
             >
               <div className="space-y-3">
-                <h1 className="text-5xl sm:text-6xl font-bold tracking-tight gradient-text">
+                <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight gradient-text">
                   Hello.
                 </h1>
-                <h2 className="text-4xl sm:text-5xl font-bold tracking-tight text-foreground">
+                <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-foreground">
                   Ask anything about Naman.
                 </h2>
               </div>
 
-              <div className="flex flex-wrap justify-center gap-2 max-w-xl">
+              <div className="flex flex-wrap justify-center gap-2 max-w-xs sm:max-w-xl">
                 {SUGGESTION_CHIPS.map((chip, i) => (
                   <motion.button
                     key={chip}
@@ -107,7 +116,7 @@ export default function Home() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: 0.15 + i * 0.06 }}
                     onClick={() => submit(chip)}
-                    className="px-4 py-2 rounded-full border border-border bg-transparent text-muted-foreground text-sm hover:border-violet-400 hover:text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-all duration-200"
+                    className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-border bg-transparent text-muted-foreground text-xs sm:text-sm hover:border-violet-400 hover:text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-all duration-200"
                   >
                     {chip}
                   </motion.button>

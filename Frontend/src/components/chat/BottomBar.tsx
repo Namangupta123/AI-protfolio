@@ -12,10 +12,10 @@ interface BottomBarProps {
 export function BottomBar({ input, setInput, onSubmit, disabled }: BottomBarProps) {
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md z-20">
-      <div className="max-w-2xl mx-auto px-4 pt-3 pb-4">
+      <div className="max-w-2xl mx-auto px-3 sm:px-4 pt-3 pb-4 sm:pb-5">
         <form
           onSubmit={onSubmit}
-          className="flex items-center gap-2 rounded-full border border-border bg-card px-5 py-3 shadow-sm input-glow transition-all"
+          className="flex items-center gap-2 rounded-full border border-border bg-card px-4 sm:px-5 py-2.5 sm:py-3 shadow-sm input-glow transition-all"
         >
           <input
             value={input}
@@ -38,7 +38,9 @@ export function BottomBar({ input, setInput, onSubmit, disabled }: BottomBarProp
         <p className="text-center text-xs text-muted-foreground mt-2">
           Answers based on resume and work history.{" "}
           <a
-            href="#"
+            href="https://drive.google.com/file/d/1ovTHPiSxHl8YzGgfdSJ0SszQDCfb_Vcu/view?usp=sharing"
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-violet-500 hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
           >
             Resume ↓
