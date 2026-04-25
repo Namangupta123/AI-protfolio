@@ -110,7 +110,11 @@ async def chat(request: ChatRequest):
     return StreamingResponse(
         stream_groq(prompt),
         media_type="text/plain",
-        headers={"X-Vercel-AI-Data-Stream": "v1"},
+        headers={
+            "X-Vercel-AI-Data-Stream": "v1",
+            "Cache-Control": "no-cache, no-transform",
+            "X-Accel-Buffering": "no",
+        },
     )
 
 

@@ -1,4 +1,6 @@
 import { NextRequest } from "next/server";
+
+export const dynamic = "force-dynamic";
 import {
   GuardrailEngine,
   InjectionGuard,
@@ -110,9 +112,13 @@ export async function POST(req: NextRequest) {
     }
 
     return new Response(makeStripProtocolStream(upstream.body!), {
-      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-cache" },
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+        "X-Accel-Buffering": "no",
+      },
     });
   } catch {
-    return new Response("Could not connect to the AI backend.", { status: 503 });
+    return new Response("Could not connect to the AI backend server.", { status: 503 });
   }
 }
