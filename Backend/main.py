@@ -1,27 +1,24 @@
-import os
 import json
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from groq import Groq
-from dotenv import load_dotenv
+from config import GROQ_API_KEY, FRONTEND_URL
 from embeddings import embed
 from database import match_documents
-
-load_dotenv()
 
 app = FastAPI(title="AI Resume RAG API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[FRONTEND_URL],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-groq_client = Groq(api_key=os.environ["GROQ_API_KEY"])
+groq_client = Groq(api_key=GROQ_API_KEY)
 
 SYSTEM_PROMPT = """You are Naman Gupta's AI representative, speaking on his behalf in a professional job interview setting.
 Your role is to represent Naman confidently, intelligently, and enthusiastically to recruiters and hiring managers.

@@ -4,25 +4,48 @@
 
 @layer base {
   :root {
-    --background: 0 0% 3%;
-    --foreground: 210 40% 95%;
-    --card: 0 0% 6%;
-    --card-foreground: 210 40% 95%;
-    --popover: 0 0% 6%;
-    --popover-foreground: 210 40% 95%;
-    --primary: 199 89% 48%;
-    --primary-foreground: 0 0% 3%;
-    --secondary: 0 0% 10%;
-    --secondary-foreground: 210 40% 95%;
-    --muted: 0 0% 10%;
-    --muted-foreground: 215 20% 55%;
-    --accent: 199 89% 48%;
-    --accent-foreground: 0 0% 3%;
+    --background: 0 0% 100%;
+    --foreground: 240 10% 4%;
+    --card: 240 5% 96%;
+    --card-foreground: 240 10% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 4%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 6% 10%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+    --accent: 240 5% 96%;
+    --accent-foreground: 240 6% 10%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 262 83% 58%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 240 10% 4%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 7%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 7%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 263 70% 70%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 4% 16%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 240 4% 16%;
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 62% 50%;
-    --destructive-foreground: 210 40% 95%;
-    --border: 0 0% 14%;
-    --input: 0 0% 10%;
-    --ring: 199 89% 48%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+    --ring: 263 70% 70%;
     --radius: 0.75rem;
   }
 }
@@ -52,14 +75,19 @@
   background: hsl(var(--muted-foreground));
 }
 
-/* Glow utilities */
-.glow-border {
-  box-shadow: 0 0 0 1px hsl(var(--border)),
-              0 0 20px -4px hsl(var(--primary) / 0.15);
+/* Gradient utilities — fixed brand colors, intentionally theme-invariant */
+.gradient-text {
+  background: linear-gradient(135deg, #7C3AED 0%, #EC4899 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.glow-border:focus-within {
-  box-shadow: 0 0 0 1px hsl(var(--primary) / 0.4),
-              0 0 24px -4px hsl(var(--primary) / 0.25);
-  transition: box-shadow 0.2s ease;
+.gradient-bg {
+  background: linear-gradient(135deg, #7C3AED 0%, #EC4899 100%);
+}
+
+/* Subtle glow for the bottom input on focus */
+.input-glow:focus-within {
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.3);
 }

@@ -1,8 +1,5 @@
-import os
 from supabase import create_client, Client
-from dotenv import load_dotenv
-
-load_dotenv()
+from config import SUPABASE_URL, SUPABASE_SERVICE_KEY
 
 _client: Client | None = None
 
@@ -10,9 +7,7 @@ _client: Client | None = None
 def get_supabase() -> Client:
     global _client
     if _client is None:
-        url = os.environ["SUPABASE_URL"]
-        key = os.environ["SUPABASE_SERVICE_KEY"]
-        _client = create_client(url, key)
+        _client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
     return _client
 
 
