@@ -1,7 +1,7 @@
 "use client";
 
 import { UIMessage, isTextUIPart, type TextUIPart } from "ai";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bot, User, AlertCircle, RefreshCw } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -109,54 +109,75 @@ function ChatBubble({ message }: { message: UIMessage }) {
         ) : (
           textParts.map((part, i) => (
             <span key={i}>
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
-                  pre: ({ children }) => (
-                    <pre className="bg-background/60 rounded p-2 text-xs overflow-x-auto my-1.5 font-mono">
-                      {children}
-                    </pre>
-                  ),
-                  code: ({ children, className }) =>
-                    className ? (
-                      <code className="font-mono text-xs">{children}</code>
-                    ) : (
-                      <code className="bg-background/60 px-1 py-0.5 rounded text-xs font-mono">
+              {part.state === "streaming" ? (
+                <TypingText text={part.text} />
+              ) : (
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
+                    pre: ({ children }) => (
+                      <pre className="bg-background/60 rounded p-2 text-xs overflow-x-auto my-1.5 font-mono">
                         {children}
-                      </code>
+                      </pre>
                     ),
-                  ul: ({ children }) => (
-                    <ul className="list-disc list-inside space-y-0.5 my-1">{children}</ul>
-                  ),
-                  ol: ({ children }) => (
-                    <ol className="list-decimal list-inside space-y-0.5 my-1">{children}</ol>
-                  ),
-                  strong: ({ children }) => (
-                    <strong className="font-semibold">{children}</strong>
-                  ),
-                  a: ({ href, children }) => (
-                    <a
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-violet-500 underline underline-offset-2 hover:text-violet-400"
-                    >
-                      {children}
-                    </a>
-                  ),
-                }}
-              >
-                {part.text}
-              </ReactMarkdown>
-              {part.state === "streaming" && (
-                <span className="inline-block w-0.5 h-3.5 bg-violet-500 ml-0.5 animate-pulse align-middle" />
+                    code: ({ children, className }) =>
+                      className ? (
+                        <code className="font-mono text-xs">{children}</code>
+                      ) : (
+                        <code className="bg-background/60 px-1 py-0.5 rounded text-xs font-mono">
+                          {children}
+                        </code>
+                      ),
+                    ul: ({ children }) => (
+                      <ul className="list-disc list-inside space-y-0.5 my-1">{children}</ul>
+                    ),
+                    ol: ({ children }) => (
+                      <ol className="list-decimal list-inside space-y-0.5 my-1">{children}</ol>
+                    ),
+                    strong: ({ children }) => (
+                      <strong className="font-semibold">{children}</strong>
+                    ),
+                    a: ({ href, children }) => (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-violet-500 underline underline-offset-2 hover:text-violet-400"
+                      >
+                        {children}
+                      </a>
+                    ),
+                  }}
+                >
+                  {part.text}
+                </ReactMarkdown>
               )}
             </span>
           ))
         )}
       </div>
     </motion.div>
+  );
+}
+
+function TypingText({ text }: { text: string }) {
+  const [visibleLen, setVisibleLen] = useState(0);
+
+  useEffect(() => {
+    if (visibleLen >= text.length) return;
+    const timeout = setTimeout(() => {
+      // Reveal up to 3 chars per tick so fast responses don't lag
+      setVisibleLen((v) => Math.min(v + 3, text.length));
+    }, 18);
+    return () => clearTimeout(timeout);
+  }, [visibleLen, text.length]);
+
+  return (
+    <>
+      {text.slice(0, visibleLen)}
+      <span className="inline-block w-0.5 h-3.5 bg-violet-500 ml-0.5 animate-pulse align-middle" />
+    </>
   );
 }
 
