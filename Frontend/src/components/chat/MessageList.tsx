@@ -38,8 +38,8 @@ export function MessageList({ messages, status, error, regenerate, timestamps }:
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
-      <ScrollArea className="flex-1 px-3 sm:px-4 py-4 sm:py-6">
-        <div className="flex flex-col gap-4 sm:gap-6 max-w-2xl mx-auto" aria-live="polite" aria-atomic="false">
+      <ScrollArea className="flex-1 px-3 sm:px-4 py-6 sm:py-8">
+        <div className="flex flex-col gap-6 sm:gap-8 max-w-2xl mx-auto" aria-live="polite" aria-atomic="false">
           <AnimatePresence initial={false}>
             {messages.map((msg, i) => (
               <ChatBubble
