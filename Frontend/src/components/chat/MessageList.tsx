@@ -1,7 +1,7 @@
 "use client";
 
 import { UIMessage, isTextUIPart } from "ai";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bot, User, AlertCircle, RefreshCw } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -17,30 +17,13 @@ interface MessageListProps {
 }
 
 export function MessageList({ messages, status, error, regenerate, timestamps }: MessageListProps) {
-  const bottomRef = useRef<HTMLDivElement>(null);
   const isWaiting = status === "submitted";
-  const isStreaming = status === "streaming";
-
-  const lastStreamingText = messages
-    .at(-1)
-    ?.parts.filter(isTextUIPart)
-    .at(-1)?.text;
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length]);
-
-  useEffect(() => {
-    if (isStreaming) {
-      bottomRef.current?.scrollIntoView({ behavior: "instant" });
-    }
-  }, [lastStreamingText, isStreaming]);
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
       <ScrollArea className="flex-1 px-3 sm:px-4 py-6 sm:py-8">
         <div className="flex flex-col gap-6 sm:gap-8 max-w-2xl mx-auto" aria-live="polite" aria-atomic="false">
-          <AnimatePresence initial={false}>
+          <AnimatePresence>
             {messages.map((msg, i) => (
               <ChatBubble
                 key={msg.id}
@@ -52,7 +35,6 @@ export function MessageList({ messages, status, error, regenerate, timestamps }:
             {isWaiting && <TypingIndicator key="typing" />}
           </AnimatePresence>
         </div>
-        <div ref={bottomRef} />
       </ScrollArea>
 
       <AnimatePresence>
