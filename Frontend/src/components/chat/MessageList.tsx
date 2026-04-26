@@ -1,7 +1,7 @@
 "use client";
 
 import { UIMessage, isTextUIPart } from "ai";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bot, User, AlertCircle, RefreshCw } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -81,6 +81,22 @@ export function MessageList({ messages, status, error, regenerate, timestamps }:
   );
 }
 
+function useTypewriter(fullText: string, messageId: string, speedMs = 15) {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    setIndex(0);
+  }, [messageId]);
+
+  useEffect(() => {
+    if (index >= fullText.length) return;
+    const t = setTimeout(() => setIndex((i) => i + 1), speedMs);
+    return () => clearTimeout(t);
+  }, [index, fullText.length, speedMs]);
+
+  return { displayed: fullText.slice(0, index), isTyping: index < fullText.length };
+}
+
 function formatTimestamp(ts: number): string {
   return new Intl.DateTimeFormat(undefined, {
     hour: "numeric",
@@ -101,6 +117,8 @@ function ChatBubble({
 }) {
   const isUser = message.role === "user";
   const textParts = message.parts.filter(isTextUIPart);
+  const fullText = textParts.map((p) => p.text).join("");
+  const { displayed, isTyping } = useTypewriter(isUser ? "" : fullText, message.id);
 
   return (
     <motion.div
@@ -131,55 +149,53 @@ function ChatBubble({
           }`}
         >
           {isUser ? (
-            textParts.map((p) => p.text).join("")
+            fullText
           ) : (
-            textParts.map((part, i) => (
-              <span key={i}>
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
-                    pre: ({ children }) => (
-                      <pre className="bg-background/60 rounded p-2 text-xs overflow-x-auto my-1.5 font-mono">
+            <>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
+                  pre: ({ children }) => (
+                    <pre className="bg-background/60 rounded p-2 text-xs overflow-x-auto my-1.5 font-mono">
+                      {children}
+                    </pre>
+                  ),
+                  code: ({ children, className }) =>
+                    className ? (
+                      <code className="font-mono text-xs">{children}</code>
+                    ) : (
+                      <code className="bg-background/60 px-1 py-0.5 rounded text-xs font-mono">
                         {children}
-                      </pre>
+                      </code>
                     ),
-                    code: ({ children, className }) =>
-                      className ? (
-                        <code className="font-mono text-xs">{children}</code>
-                      ) : (
-                        <code className="bg-background/60 px-1 py-0.5 rounded text-xs font-mono">
-                          {children}
-                        </code>
-                      ),
-                    ul: ({ children }) => (
-                      <ul className="list-disc list-inside space-y-0.5 my-1">{children}</ul>
-                    ),
-                    ol: ({ children }) => (
-                      <ol className="list-decimal list-inside space-y-0.5 my-1">{children}</ol>
-                    ),
-                    strong: ({ children }) => (
-                      <strong className="font-semibold">{children}</strong>
-                    ),
-                    a: ({ href, children }) => (
-                      <a
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-violet-500 underline underline-offset-2 hover:text-violet-400"
-                      >
-                        {children}
-                      </a>
-                    ),
-                  }}
-                >
-                  {part.text}
-                </ReactMarkdown>
-                {part.state === "streaming" && (
-                  <span className="inline-block w-px h-3.5 bg-violet-500 ml-0.5 animate-[blink_1s_step-end_infinite] align-middle" />
-                )}
-              </span>
-            ))
+                  ul: ({ children }) => (
+                    <ul className="list-disc list-inside space-y-0.5 my-1">{children}</ul>
+                  ),
+                  ol: ({ children }) => (
+                    <ol className="list-decimal list-inside space-y-0.5 my-1">{children}</ol>
+                  ),
+                  strong: ({ children }) => (
+                    <strong className="font-semibold">{children}</strong>
+                  ),
+                  a: ({ href, children }) => (
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-violet-500 underline underline-offset-2 hover:text-violet-400"
+                    >
+                      {children}
+                    </a>
+                  ),
+                }}
+              >
+                {displayed}
+              </ReactMarkdown>
+              {isTyping && (
+                <span className="inline-block w-px h-3.5 bg-violet-500 ml-0.5 animate-[blink_1s_step-end_infinite] align-middle" />
+              )}
+            </>
           )}
         </div>
 
