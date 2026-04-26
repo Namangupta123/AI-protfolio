@@ -17,3 +17,4 @@ Frontend/next-env.d.ts
 Frontend/tsconfig.tsbuildinfo
 Frontend/package-lock.json
 Backend/knowledge_base.md
+docs/

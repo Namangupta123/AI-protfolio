@@ -148,7 +148,7 @@ export default function Home() {
       >
         <div className="flex items-center gap-2 font-mono text-sm font-medium">
           <Braces className="w-4 h-4 text-violet-500" />
-          <span>naman.dev</span>
+          <span>naman.app</span>
         </div>
         <nav className="flex items-center gap-3">
           {SOCIAL_LINKS.map(({ icon: Icon, label, href }) => (

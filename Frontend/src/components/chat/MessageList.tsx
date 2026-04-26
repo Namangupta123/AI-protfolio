@@ -81,7 +81,7 @@ export function MessageList({ messages, status, error, regenerate, timestamps }:
   );
 }
 
-function useTypewriter(fullText: string, messageId: string, speedMs = 15) {
+function useTypewriter(fullText: string, messageId: string, speedMs = 10) {
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
