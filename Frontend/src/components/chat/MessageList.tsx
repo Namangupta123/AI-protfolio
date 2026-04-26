@@ -160,7 +160,7 @@ function ChatBubble({ message, timestamp }: { message: UIMessage; timestamp?: nu
                 {part.text}
               </ReactMarkdown>
               {part.state === "streaming" && (
-                <span className="inline-block w-0.5 h-3.5 bg-violet-500 ml-0.5 animate-pulse align-middle" />
+                <span className="inline-block w-px h-3.5 bg-violet-500 ml-0.5 animate-[blink_1s_step-end_infinite] align-middle" />
               )}
             </span>
           ))
