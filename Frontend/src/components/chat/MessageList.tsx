@@ -189,15 +189,11 @@ function TypingIndicator() {
       <div className="shrink-0 flex items-center justify-center w-7 h-7 rounded-full border bg-secondary border-border text-muted-foreground">
         <Bot className="w-3.5 h-3.5" />
       </div>
-      <div className="bg-secondary border border-border rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1 items-center">
-        {[0, 1, 2].map((i) => (
-          <motion.span
-            key={i}
-            className="w-1.5 h-1.5 rounded-full bg-muted-foreground"
-            animate={{ opacity: [0.3, 1, 0.3], y: [0, -3, 0] }}
-            transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.15 }}
-          />
-        ))}
+      <div className="max-w-[90%] sm:max-w-[80%] rounded-2xl border border-border border-l-2 border-l-violet-500/40 bg-card shadow-sm overflow-hidden">
+        <div className="px-5 py-4 flex flex-col gap-3">
+          <div className="h-3 rounded skeleton-shimmer" style={{ width: "70%" }} />
+          <div className="h-3 rounded skeleton-shimmer" style={{ width: "45%" }} />
+        </div>
       </div>
     </motion.div>
   );
