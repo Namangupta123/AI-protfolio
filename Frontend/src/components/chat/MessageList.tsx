@@ -141,6 +141,12 @@ function ChatBubble({
 
       {/* Card + timestamp stacked vertically */}
       <div className="flex flex-col min-w-0">
+        <div className={`flex items-end gap-2 ${isUser ? "flex-row" : ""}`}>
+          {isUser && timestamp && (
+            <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-[10px] text-muted-foreground whitespace-nowrap shrink-0">
+              {formatTimestamp(timestamp)}
+            </span>
+          )}
         <div
           className={`max-w-[90%] sm:max-w-[80%] rounded-2xl text-sm leading-relaxed ${
             isUser
@@ -151,7 +157,12 @@ function ChatBubble({
           {isUser ? (
             fullText
           ) : (
-            <>
+            isTyping ? (
+              <span className="whitespace-pre-wrap">
+                {displayed}
+                <span className="inline-block w-px h-3.5 bg-violet-500 ml-0.5 animate-[blink_1s_step-end_infinite] align-middle" />
+              </span>
+            ) : (
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
@@ -190,16 +201,14 @@ function ChatBubble({
                   ),
                 }}
               >
-                {displayed}
+                {fullText}
               </ReactMarkdown>
-              {isTyping && (
-                <span className="inline-block w-px h-3.5 bg-violet-500 ml-0.5 animate-[blink_1s_step-end_infinite] align-middle" />
-              )}
-            </>
+            )
           )}
         </div>
+        </div>
 
-        {timestamp && (
+        {!isUser && timestamp && (
           <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-[10px] text-muted-foreground text-right mt-1 whitespace-nowrap">
             {formatTimestamp(timestamp)}
           </span>
