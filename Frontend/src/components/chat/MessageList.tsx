@@ -127,7 +127,7 @@ function ChatBubble({
           className={`max-w-[90%] sm:max-w-[80%] rounded-2xl text-sm leading-relaxed ${
             isUser
               ? "gradient-bg text-white px-4 py-3"
-              : "bg-card text-foreground px-5 py-4 border border-border border-l-2 border-l-violet-500/40 shadow-sm"
+              : "text-foreground px-1 py-1"
           }`}
         >
           {isUser ? (
