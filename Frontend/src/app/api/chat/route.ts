@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
+export const runtime = "edge";
 import {
   GuardrailEngine,
   InjectionGuard,
