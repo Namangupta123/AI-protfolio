@@ -8,19 +8,7 @@ from groq import AsyncGroq
 from config import GROQ_API_KEY, FRONTEND_URL, SYSTEM_PROMPT_FILE
 from embeddings import embed
 from database import match_documents
-
-_BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
-_DEFAULT_SYSTEM_PROMPT = "You are a helpful AI assistant."
-
-
-def get_system_prompt() -> str:
-    prompt_path = os.path.join(_BACKEND_DIR, SYSTEM_PROMPT_FILE)
-    try:
-        with open(prompt_path, "r", encoding="utf-8") as f:
-            return f.read().strip()
-    except FileNotFoundError:
-        print(f"[WARN] system_prompt.txt not found at {prompt_path}. Using default.")
-        return _DEFAULT_SYSTEM_PROMPT
+from config import get_system_prompt
 
 app = FastAPI(title="AI Resume RAG API")
 
