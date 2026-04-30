@@ -61,6 +61,8 @@ function saveSession(msgs: UIMessage[], timestamps: Record<string, number>) {
 const GITHUB_URL = process.env.NEXT_PUBLIC_GITHUB_URL;
 const LINKEDIN_URL = process.env.NEXT_PUBLIC_LINKEDIN_URL;
 const MAIL_URL = process.env.NEXT_PUBLIC_MAIL_URL;
+const NAME = process.env.NEXT_PUBLIC_NAME;
+const TITLE = process.env.NEXT_PUBLIC_TITLE;
 
 const SOCIAL_LINKS = [
   { icon: Github, label: "GitHub", href: GITHUB_URL },
@@ -69,7 +71,7 @@ const SOCIAL_LINKS = [
 ];
 
 const SUGGESTION_CHIPS = [
-  "What are Naman's top skills?",
+  "What are his top skills?",
   "Tell me about his projects",
   "What's his work experience?",
   "Is he open to opportunities?",
@@ -148,7 +150,7 @@ export default function Home() {
       >
         <div className="flex items-center gap-2 font-mono text-sm font-medium">
           <Braces className="w-4 h-4 text-violet-500" />
-          <span>naman.app</span>
+          <span>{TITLE}</span>
         </div>
         <nav className="flex items-center gap-3">
           {SOCIAL_LINKS.map(({ icon: Icon, label, href }) => (
@@ -194,7 +196,7 @@ export default function Home() {
                   Hello.
                 </h1>
                 <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-foreground">
-                  Ask anything about Naman.
+                  Ask anything about {NAME}.
                 </h2>
               </div>
 

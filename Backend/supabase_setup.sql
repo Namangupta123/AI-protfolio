@@ -1,9 +1,11 @@
--- Run this in the Supabase SQL Editor before ingesting data.
+-- Run this in the Supabase or any other SQL Editor before ingesting data.
 
 -- 1. Enable pgvector extension
+
 create extension if not exists vector;
 
 -- 2. Create the documents table
+
 create table if not exists documents (
   id        bigserial primary key,
   content   text        not null,
@@ -12,9 +14,11 @@ create table if not exists documents (
 
 -- 3. Create an IVFFlat index for fast cosine similarity search
 --    (build AFTER ingesting data for best performance)
--- create index on documents using ivfflat (embedding vector_cosine_ops) with (lists = 100);
+
+create index on documents using ivfflat (embedding vector_cosine_ops) with (lists = 100);
 
 -- 4. Create the match_documents function used by the RAG query
+
 create or replace function match_documents(
   query_embedding vector(384),
   match_count     int default 3

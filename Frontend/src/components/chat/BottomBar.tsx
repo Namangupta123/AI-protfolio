@@ -3,6 +3,8 @@
 import { ArrowUp } from "lucide-react";
 
 const RESUME_URL = process.env.NEXT_PUBLIC_RESUME_URL;
+const NAME = process.env.NEXT_PUBLIC_NAME;
+
 interface BottomBarProps {
   input: string;
   setInput: (v: string) => void;
@@ -21,7 +23,7 @@ export function BottomBar({ input, setInput, onSubmit, disabled }: BottomBarProp
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask anything about Naman..."
+            placeholder={`Ask anything about ${NAME}...`}
             className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50"
             disabled={disabled}
             autoComplete="off"
