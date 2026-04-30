@@ -51,7 +51,7 @@ echo "  Installing / verifying Python dependencies..."
 pip install -r requirements.txt -q
 
 echo -e "  ${GREEN}✓ Starting FastAPI on http://localhost:8000${NC}"
-uvicorn main:app --reload --port 8000 &
+uvicorn main:app --reload --reload-exclude ".venv" --port 8000 &
 BACKEND_PID=$!
 
 # ── Frontend ──────────────────────────────────────────────────────────────────

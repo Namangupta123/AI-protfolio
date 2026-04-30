@@ -48,7 +48,7 @@ start "AI Portfolio - Backend" cmd /k ^
     && echo. ^
     && echo  Backend ready: http://localhost:8000 ^
     && echo. ^
-    && uvicorn main:app --reload --port 8000"
+    && uvicorn main:app --reload --reload-exclude ".venv" --port 8000"
 
 REM ── Frontend ──────────────────────────────────────────────────────────────────
 echo.
