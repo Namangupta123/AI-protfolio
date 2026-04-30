@@ -128,8 +128,8 @@ Press **Ctrl+C** (Mac/Linux) to stop both servers at once. On Windows, close the
 
 ```bash
 # Fork this repo on GitHub, then clone your fork
-git clone https://github.com/<your-username>/AI_Resume.git
-cd AI_Resume
+git clone https://github.com/Namangupta123/AI-protfolio.git
+cd AI-protfolio
 ```
 
 ---
@@ -225,7 +225,8 @@ Open [http://localhost:3000](http://localhost:3000) — your portfolio chatbot i
 | `GROQ_API_KEY` | Yes | API key from [console.groq.com](https://console.groq.com) |
 | `HUGGING_FACE_API_KEY` | Yes | Access token from [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens) |
 | `FRONTEND_URL` | No | Origin allowed by CORS. Defaults to `http://localhost:3000` |
-| `KNOWLEDGE_BASE_FILE` | No | Path to your resume/knowledge base markdown file. Defaults to `resume.md` |
+| `KNOWLEDGE_BASE_FILE` | Yes | Path to your resume/knowledge base markdown file. |
+| `SYSTEM_PROMPT_FILE` | YES | Path to the AI persona file. |
 
 ### Frontend (`Frontend/.env.local`)
 
@@ -408,13 +409,15 @@ Replace these with questions that fit your own profile and use the correct prono
 
 ### AI Persona & Tone
 
-The AI's personality is controlled by the `SYSTEM_PROMPT` string at the top of [`Backend/main.py`](Backend/main.py). The current prompt makes the AI speak in third person with a casual Gen Z tone. Rewrite it to match your own voice — formal, friendly, technical, or anything else. Keep the "book a call" escalation instruction if you want the CTA flow to work.
+The AI's personality lives in [`Backend/data/system_prompt.txt`](Backend/data/system_prompt.txt) — a plain text file completely separate from the Python code. Edit it and the next message sent to the API will use the new personality automatically, no server restart needed.
 
 Key behaviors to customize:
 - **Tone and style** — adjust the opening instructions about vocabulary and formality
 - **Identity** — replace "Naman" / "he/him" with your own name and pronouns
 - **Escalation** — update the email address and CTA wording
 - **Topics to deflect** — define what the AI should and shouldn't discuss
+
+If you ever want to store the file somewhere else, point `SYSTEM_PROMPT_FILE` in `Backend/.env` to the new path (relative to the `Backend/` directory). If the file is missing at startup, the backend falls back to a generic `"You are a helpful AI assistant."` default and logs a warning.
 
 ---
 
@@ -461,12 +464,14 @@ Groq supports multiple models. See the full list at [console.groq.com/docs/model
 AI_Resume/
 │
 ├── Backend/
+│   ├── data/
+│   │   └── system_prompt.txt    # ← YOUR PERSONA: edit to change the AI's tone & identity
 │   ├── .env.example         # template for backend env vars
 │   ├── config.py            # loads and validates env vars
 │   ├── database.py          # Supabase client — insert & vector search
 │   ├── embeddings.py        # HuggingFace endpoint embeddings singleton
 │   ├── ingest.py            # one-shot script to populate Supabase
-│   ├── main.py              # FastAPI app — /chat streaming endpoint + SYSTEM_PROMPT
+│   ├── main.py              # FastAPI app — /chat streaming endpoint
 │   ├── requirements.txt     # Python dependencies
 │   ├── resume.md            # ← YOUR DATA: edit this with your resume content
 │   └── supabase_setup.sql   # run once in Supabase SQL Editor to initialize the DB

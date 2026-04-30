@@ -11,9 +11,10 @@ import {
 } from "@llm-guardrails/core";
 
 const BACKEND_URL = process.env.BACKEND_URL;
+const NAME= process.env.NEXT_PUBLIC_NAME;;
 
 const BLOCKED_MESSAGE =
-  "I'm Naman's professional portfolio assistant. I can only answer questions about his skills, experience, and projects. Please keep your question on topic.";
+  "I'm " + NAME + "'s professional portfolio assistant. I can only answer questions about his skills, experience, and projects. Please keep your question on topic.";
 
 // Module-level singleton — built once, reused across requests (avoids re-compiling patterns)
 const engine = new GuardrailEngine({ prefilterMode: true }); // L1 + L2 only, no LLM calls

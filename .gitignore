@@ -18,3 +18,4 @@ Frontend/tsconfig.tsbuildinfo
 Frontend/package-lock.json
 Backend/knowledge_base.md
 docs/
+Backend/data/prompt.txt

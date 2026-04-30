@@ -3,13 +3,15 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 
+const NAME= process.env.NEXT_PUBLIC_NAME;
+
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  title: "Naman Gupta — AI Portfolio",
+  title: `${NAME} — AI Portfolio`,
   description:
-    "Ask me anything about Naman's skills, experience, and projects.",
+    "Ask me anything about " + NAME + "'s skills, experience, and projects.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
