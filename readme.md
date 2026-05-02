@@ -2,7 +2,7 @@
 
 > A RAG-powered chatbot that lets recruiters ask anything about you — your skills, projects, and experience — and get instant, streaming answers. Fork it, drop in your own data, and ship your own interactive AI portfolio.
 
-![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
+![Next.js](https://img.shields.io/badge/Next.js-16.2-black?logo=next.js)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?logo=fastapi)
 ![Supabase](https://img.shields.io/badge/Supabase-pgvector-3ECF8E?logo=supabase)
 ![Groq](https://img.shields.io/badge/Groq-LLaMA_4-F55036?logo=groq)
@@ -14,7 +14,7 @@
 
 ## Demo
 
-> Add a screenshot or screen recording of your running portfolio here.
+![AI Portfolio Demo](demo.png)
 
 ---
 
@@ -68,7 +68,7 @@ Recruiter types a question
 | Frontend framework | Next.js 16 (App Router, React 19) |
 | Styling | Tailwind CSS, shadcn/ui (Radix primitives) |
 | Animations | Framer Motion |
-| AI SDK | Vercel AI SDK v6 (`ai`, `@ai-sdk/react`) |
+| AI SDK | Vercel AI SDK (`ai` v6, `@ai-sdk/react` v3) |
 | Markdown rendering | `react-markdown` + `remark-gfm` |
 | Guardrails | `@llm-guardrails/core` (injection, toxicity, PII) |
 | Theming | `next-themes` |
@@ -227,6 +227,7 @@ Open [http://localhost:3000](http://localhost:3000) — your portfolio chatbot i
 | `FRONTEND_URL` | No | Origin allowed by CORS. Defaults to `http://localhost:3000` |
 | `KNOWLEDGE_BASE_FILE` | Yes | Path to your resume/knowledge base markdown file. |
 | `SYSTEM_PROMPT_FILE` | YES | Path to the AI persona file. |
+| `CUSTOM_SYSTEM_PROMPT` | No | Overrides the system prompt file entirely. Set this in your production environment to keep the prompt private without committing it to the repo. Template in `Backend/.env.example`. |
 
 ### Frontend (`Frontend/.env.local`)
 
@@ -411,11 +412,24 @@ Replace these with questions that fit your own profile and use the correct prono
 
 The AI's personality lives in [`Backend/data/system_prompt.txt`](Backend/data/system_prompt.txt) — a plain text file completely separate from the Python code. Edit it and the next message sent to the API will use the new personality automatically, no server restart needed.
 
-Key behaviors to customize:
+**Start by replacing the placeholders** at the top of the file with your own details:
+
+| Placeholder | Replace with |
+|---|---|
+| `[FIRST_NAME]` | Your first name |
+| `[LAST_NAME]` | Your last name |
+| `[EMAIL_ADDRESS]` | Your contact email |
+| `[PROJECT_1]`, `[PROJECT_2]` | Names of your notable projects |
+| `[KEY_TECH_1]`, `[KEY_TECH_2]` | Your primary tech stack |
+| `[UNIVERSITY/COMPANY]`, `[MAJOR_PROJECT]` | Your background details |
+
+Key behaviors to customize beyond the placeholders:
 - **Tone and style** — adjust the opening instructions about vocabulary and formality
-- **Identity** — replace "Naman" / "he/him" with your own name and pronouns
-- **Escalation** — update the email address and CTA wording
+- **Pronouns** — update "he/him" to your preferred pronouns throughout the file
+- **Escalation** — update the CTA wording and make sure `[EMAIL_ADDRESS]` is set
 - **Topics to deflect** — define what the AI should and shouldn't discuss
+
+> **Production privacy:** If you don't want the system prompt committed to your public repo, set the `CUSTOM_SYSTEM_PROMPT` environment variable in your production environment instead. When this variable is set, it fully overrides the file and no file read occurs. The full list of backend env vars (including `CUSTOM_SYSTEM_PROMPT`) is in [`Backend/.env.example`](Backend/.env.example).
 
 If you ever want to store the file somewhere else, point `SYSTEM_PROMPT_FILE` in `Backend/.env` to the new path (relative to the `Backend/` directory). If the file is missing at startup, the backend falls back to a generic `"You are a helpful AI assistant."` default and logs a warning.
 

@@ -12,6 +12,9 @@ export const metadata: Metadata = {
   title: `${NAME} — AI Portfolio`,
   description:
     "Ask me anything about " + NAME + "'s skills, experience, and projects.",
+  icons: {
+    icon: { url: "/favicon.ico", sizes: "any" },
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
