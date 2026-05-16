@@ -1,5 +1,5 @@
 """
-Run this script once to ingest knowledge_base.md into Supabase.
+Run this script once to ingest resume.md into Supabase.
 Usage: python ingest.py
 """
 import time
@@ -7,9 +7,9 @@ from pathlib import Path
 from langchain_text_splitters import MarkdownHeaderTextSplitter
 from database import insert_document
 from embeddings import embed
+from config import KNOWLEDGE_BASE_FILE
 
-
-def ingest(path: str = "knowledge_base.md") -> None:
+def ingest(path: str = KNOWLEDGE_BASE_FILE) -> None:
     resolved = Path(__file__).parent / path
     text = resolved.read_text(encoding="utf-8")
 

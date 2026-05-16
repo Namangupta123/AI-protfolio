@@ -1,0 +1,33 @@
+# YOUR PERSONAL KNOWLEDGE BASE
+
+## Personal Summary
+
+YOUR PERSONAL SUMMARY
+
+## Education
+
+YOUR EDUCATION OVERVIEW
+
+## Technical Skills
+
+YOUR TECHNICAL SKILLS
+
+## Projects Overview
+
+YOUR PROJECTS OVERVIEW
+
+## Projects
+
+YOUR PROJECTS IN DETAIL
+
+## Work Experience Overview
+
+YOUR WORK EXPERIENCE OVERVIEW
+
+## Work Experience
+
+YOUR WORK EXPERIENCE IN DETAIL
+
+## Contact
+
+YOUR CONTACT DETAILS
