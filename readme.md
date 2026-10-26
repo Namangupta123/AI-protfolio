@@ -34,7 +34,7 @@ Recruiter types a question
 │   FastAPI Backend       │
 │   /chat                 │
 │                         │
-│  1. Embed the query     │  ← HuggingFace (all-MiniLM-L6-v2, 384 dims)
+│  1. Embed the query     │  ← local MiniLM or HuggingFace API (384 dims)
 │  2. Vector search       │  ← Supabase pgvector (cosine similarity, top 8)
 │  3. Build RAG prompt    │
 │  4. Stream LLM response │  ← Groq (LLaMA 4 Scout)
@@ -74,7 +74,7 @@ Recruiter types a question
 | Theming | `next-themes` |
 | Backend framework | FastAPI + Uvicorn |
 | LLM provider | Groq (`meta-llama/llama-4-scout-17b-16e-instruct`) |
-| Embeddings | HuggingFace Endpoints (`all-MiniLM-L6-v2`, 384 dims) |
+| Embeddings | `all-MiniLM-L6-v2` (384 dims) — local MiniLM by default, or HuggingFace Inference API |
 | RAG orchestration | LangChain (`MarkdownHeaderTextSplitter`) |
 | Vector database | Supabase (PostgreSQL + pgvector) |
 
@@ -88,7 +88,7 @@ Make sure you have these installed and accounts created before starting:
 - **Python** ≥ 3.11
 - A **[Supabase](https://supabase.com)** account (free tier is enough)
 - A **[Groq](https://console.groq.com)** API key (free tier available)
-- A **[Hugging Face](https://huggingface.co)** account with an API token (free)
+- *(Optional)* A **[Hugging Face](https://huggingface.co)** access token — only if you use the Inference API instead of the local model
 
 ---
 
@@ -177,7 +177,7 @@ Edit [`Backend/resume.md`](Backend/resume.md) (or whichever file `KNOWLEDGE_BASE
 python ingest.py
 ```
 
-This splits your markdown file by headers, generates embeddings for each chunk, and stores them in Supabase. You only need to re-run this when your knowledge base changes.
+This splits your markdown file by headers, generates embeddings for each chunk, and stores them in Supabase. By default it uses the **local** MiniLM model (first run downloads ~90MB into the HuggingFace cache; later runs are free and offline). Set `EMBEDDING_PROVIDER=huggingface` to use the HuggingFace Inference API instead. You only need to re-run this when your knowledge base changes, or after switching embedding providers.
 
 **Start the API server:**
 
@@ -223,11 +223,18 @@ Open [http://localhost:3000](http://localhost:3000) — your portfolio chatbot i
 | `SUPABASE_URL` | Yes | Your Supabase project URL (`https://<id>.supabase.co`) |
 | `SUPABASE_SERVICE_KEY` | Yes | Service role key from Supabase → Project Settings → API |
 | `GROQ_API_KEY` | Yes | API key from [console.groq.com](https://console.groq.com) |
-| `HUGGING_FACE_API_KEY` | Yes | Access token from [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens) |
+| `EMBEDDING_PROVIDER` | No | Embedding backend. `local` (default) runs MiniLM on CPU. `huggingface` uses the HuggingFace Inference API. |
+| `HUGGING_FACE_API_KEY` | Only if `EMBEDDING_PROVIDER=huggingface` | Access token from [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens). Not needed for local embeddings. |
 | `FRONTEND_URL` | No | Origin allowed by CORS. Defaults to `http://localhost:3000` |
 | `KNOWLEDGE_BASE_FILE` | Yes | Path to your resume/knowledge base markdown file. |
 | `SYSTEM_PROMPT_FILE` | YES | Path to the AI persona file. |
 | `CUSTOM_SYSTEM_PROMPT` | No | Overrides the system prompt file entirely. Set this in your production environment to keep the prompt private without committing it to the repo. Template in `Backend/.env.example`. |
+
+Both providers use `sentence-transformers/all-MiniLM-L6-v2` (384 dimensions), so the Supabase `documents` table does not change. Ingest and `/chat` must use the same provider — re-run `python ingest.py` if you switch.
+
+**Local model (default)** — set `EMBEDDING_PROVIDER=local` or omit it. Embeddings run on your CPU via `sentence-transformers`. No HuggingFace token and no Inference credits. Best for development and for avoiding HuggingFace 402 / out-of-credits errors.
+
+**HuggingFace Inference API** — set `EMBEDDING_PROVIDER=huggingface` and `HUGGING_FACE_API_KEY` to a token from [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens). The backend calls HuggingFace's hosted endpoint instead of loading the model locally. This needs remaining Inference Provider credits; if you hit `402 Payment Required`, switch back to `local` and re-ingest.
 
 ### Frontend (`Frontend/.env.local`)
 
@@ -483,7 +490,7 @@ AI_Resume/
 │   ├── .env.example         # template for backend env vars
 │   ├── config.py            # loads and validates env vars
 │   ├── database.py          # Supabase client — insert & vector search
-│   ├── embeddings.py        # HuggingFace endpoint embeddings singleton
+│   ├── embeddings.py        # embeddings singleton — local MiniLM or HuggingFace API
 │   ├── ingest.py            # one-shot script to populate Supabase
 │   ├── main.py              # FastAPI app — /chat streaming endpoint
 │   ├── requirements.txt     # Python dependencies
