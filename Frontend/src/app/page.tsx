@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { TextStreamChatTransport, UIMessage, isTextUIPart } from "ai";
 import { motion, AnimatePresence } from "framer-motion";
@@ -9,6 +9,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { MessageList } from "@/components/chat/MessageList";
 import { BottomBar } from "@/components/chat/BottomBar";
 import { BookACallButton } from "@/components/BookACallButton";
+import { BLOCKED_MESSAGE, NO_CONTEXT_MESSAGE } from "@/lib/chat-messages";
 
 // ── Session storage helpers ───────────────────────────────────────────────────
 
@@ -55,6 +56,33 @@ function saveSession(msgs: UIMessage[], timestamps: Record<string, number>) {
     sessionStorage.setItem("chatMessages", JSON.stringify(entries));
   } catch {
     // storage full or unavailable — fail silently
+  }
+}
+
+type StoredSuggestions = { messageId: string; items: string[] };
+
+const SUGGESTIONS_KEY = "chatSuggestions";
+
+function saveSuggestions(value: StoredSuggestions | null) {
+  try {
+    if (value) sessionStorage.setItem(SUGGESTIONS_KEY, JSON.stringify(value));
+    else sessionStorage.removeItem(SUGGESTIONS_KEY);
+  } catch {
+    // storage full or unavailable — fail silently
+  }
+}
+
+// Only returns pills that still belong to the last message of the restored chat
+function loadSuggestions(lastMessageId: string | undefined): StoredSuggestions | null {
+  try {
+    const raw = sessionStorage.getItem(SUGGESTIONS_KEY);
+    if (!raw || !lastMessageId) return null;
+    const parsed = JSON.parse(raw) as Partial<StoredSuggestions>;
+    if (parsed.messageId !== lastMessageId || !Array.isArray(parsed.items)) return null;
+    const items = parsed.items.filter((s): s is string => typeof s === "string");
+    return items.length > 0 ? { messageId: parsed.messageId, items } : null;
+  } catch {
+    return null;
   }
 }
 
@@ -129,6 +157,81 @@ export default function Home() {
       saveSession(messages, timestamps);
     }
   }, [messages, status, timestamps]);
+
+  // Follow-up question pills, generated after each answer finishes streaming
+  const [suggestions, setSuggestions] = useState<StoredSuggestions | null>(null);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const suggestionsAbortRef = useRef<AbortController | null>(null);
+  const prevStatusRef = useRef(status);
+
+  // Restore the pills for the last answer after a page refresh
+  useEffect(() => {
+    const { messages: restored } = loadSession();
+    const last = restored[restored.length - 1];
+    if (last?.role !== "assistant") return;
+    const saved = loadSuggestions(last.id);
+    if (saved) setSuggestions(saved);
+  }, []);
+
+  useEffect(() => {
+    const prev = prevStatusRef.current;
+    prevStatusRef.current = status;
+
+    // New turn started: drop old pills and cancel any in-flight request
+    if (status === "submitted") {
+      suggestionsAbortRef.current?.abort();
+      setSuggestions(null);
+      saveSuggestions(null);
+      setSuggestionsLoading(false);
+      return;
+    }
+
+    // Only react when a response has just finished successfully
+    if (status !== "ready" || (prev !== "streaming" && prev !== "submitted")) return;
+
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage || lastMessage.role !== "assistant") return;
+
+    const answer = lastMessage.parts.filter(isTextUIPart).map((p) => p.text).join("").trim();
+    if (!answer || answer === BLOCKED_MESSAGE || answer === NO_CONTEXT_MESSAGE) return;
+
+    const userTexts = messages
+      .filter((m) => m.role === "user")
+      .map((m) => m.parts.filter(isTextUIPart).map((p) => p.text).join("").trim())
+      .filter(Boolean);
+    const question = userTexts[userTexts.length - 1];
+    if (!question) return;
+
+    const controller = new AbortController();
+    suggestionsAbortRef.current?.abort();
+    suggestionsAbortRef.current = controller;
+    setSuggestionsLoading(true);
+
+    fetch("/api/suggestions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question, answer, asked: userTexts }),
+      signal: controller.signal,
+    })
+      .then((res) => (res.ok ? res.json() : { suggestions: [] }))
+      .then((data: { suggestions?: unknown }) => {
+        if (controller.signal.aborted) return;
+        const items = Array.isArray(data.suggestions)
+          ? data.suggestions.filter((s): s is string => typeof s === "string")
+          : [];
+        const next = items.length > 0 ? { messageId: lastMessage.id, items } : null;
+        setSuggestions(next);
+        saveSuggestions(next);
+        setSuggestionsLoading(false);
+      })
+      .catch(() => {
+        if (controller.signal.aborted) return;
+        setSuggestionsLoading(false);
+      });
+  }, [status, messages]);
+
+  // Cancel any pending suggestion request on unmount
+  useEffect(() => () => suggestionsAbortRef.current?.abort(), []);
 
   const hasChat = messages.length > 0;
 
@@ -234,7 +337,10 @@ export default function Home() {
             error={error}
             regenerate={regenerate}
             timestamps={timestamps}
-            setInput={setInput}
+            suggestions={suggestions?.items ?? []}
+            suggestionsMessageId={suggestions?.messageId ?? null}
+            suggestionsLoading={suggestionsLoading}
+            onSelectSuggestion={submit}
           />
         )}
       </main>
