@@ -34,7 +34,7 @@ Recruiter types a question
 │   FastAPI Backend       │
 │   /chat                 │
 │                         │
-│  1. Embed the query     │  ← local MiniLM or HuggingFace API (384 dims)
+│  1. Embed the query     │  ← FastEmbed MiniLM or HuggingFace API (384 dims)
 │  2. Vector search       │  ← Supabase pgvector (cosine similarity, top 8)
 │  3. Build RAG prompt    │
 │  4. Stream LLM response │  ← Groq (LLaMA 4 Scout)
@@ -74,7 +74,7 @@ Recruiter types a question
 | Theming | `next-themes` |
 | Backend framework | FastAPI + Uvicorn |
 | LLM provider | Groq (`meta-llama/llama-4-scout-17b-16e-instruct`) |
-| Embeddings | `all-MiniLM-L6-v2` (384 dims) — local MiniLM by default, or HuggingFace Inference API |
+| Embeddings | `all-MiniLM-L6-v2` (384 dims) — local FastEmbed/ONNX by default, or HuggingFace Inference API |
 | RAG orchestration | LangChain (`MarkdownHeaderTextSplitter`) |
 | Vector database | Supabase (PostgreSQL + pgvector) |
 
@@ -177,7 +177,7 @@ Edit [`Backend/resume.md`](Backend/resume.md) (or whichever file `KNOWLEDGE_BASE
 python ingest.py
 ```
 
-This splits your markdown file by headers, generates embeddings for each chunk, and stores them in Supabase. By default it uses the **local** MiniLM model (first run downloads ~90MB into the HuggingFace cache; later runs are free and offline). Set `EMBEDDING_PROVIDER=huggingface` to use the HuggingFace Inference API instead. You only need to re-run this when your knowledge base changes, or after switching embedding providers.
+This splits your markdown file by headers, generates embeddings for each chunk, and stores them in Supabase. By default it uses the **local** MiniLM model via FastEmbed/ONNX (first run downloads ~90MB into the cache; later runs are free and offline). This stays well under 512MB of RAM, so it works on Render's free instance. Set `EMBEDDING_PROVIDER=huggingface` to use the HuggingFace Inference API instead. You only need to re-run this when your knowledge base changes, or after switching embedding providers.
 
 **Start the API server:**
 
@@ -223,7 +223,7 @@ Open [http://localhost:3000](http://localhost:3000) — your portfolio chatbot i
 | `SUPABASE_URL` | Yes | Your Supabase project URL (`https://<id>.supabase.co`) |
 | `SUPABASE_SERVICE_KEY` | Yes | Service role key from Supabase → Project Settings → API |
 | `GROQ_API_KEY` | Yes | API key from [console.groq.com](https://console.groq.com) |
-| `EMBEDDING_PROVIDER` | No | Embedding backend. `local` (default) runs MiniLM on CPU. `huggingface` uses the HuggingFace Inference API. |
+| `EMBEDDING_PROVIDER` | No | Embedding backend. `local` (default) runs MiniLM on CPU via FastEmbed/ONNX. `huggingface` uses the HuggingFace Inference API. |
 | `HUGGING_FACE_API_KEY` | Only if `EMBEDDING_PROVIDER=huggingface` | Access token from [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens). Not needed for local embeddings. |
 | `FRONTEND_URL` | No | Origin allowed by CORS. Defaults to `http://localhost:3000` |
 | `KNOWLEDGE_BASE_FILE` | Yes | Path to your resume/knowledge base markdown file. |
@@ -232,7 +232,7 @@ Open [http://localhost:3000](http://localhost:3000) — your portfolio chatbot i
 
 Both providers use `sentence-transformers/all-MiniLM-L6-v2` (384 dimensions), so the Supabase `documents` table does not change. Ingest and `/chat` must use the same provider — re-run `python ingest.py` if you switch.
 
-**Local model (default)** — set `EMBEDDING_PROVIDER=local` or omit it. Embeddings run on your CPU via `sentence-transformers`. No HuggingFace token and no Inference credits. Best for development and for avoiding HuggingFace 402 / out-of-credits errors.
+**Local model (default)** — set `EMBEDDING_PROVIDER=local` or omit it. Embeddings run on your CPU via FastEmbed (ONNX Runtime), not PyTorch. That keeps memory around ~150MB, which fits Render's 512MB plan. No HuggingFace token and no Inference credits. Do **not** install `sentence-transformers` on a 512MB host — loading PyTorch will OOM-kill the instance.
 
 **HuggingFace Inference API** — set `EMBEDDING_PROVIDER=huggingface` and `HUGGING_FACE_API_KEY` to a token from [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens). The backend calls HuggingFace's hosted endpoint instead of loading the model locally. This needs remaining Inference Provider credits; if you hit `402 Payment Required`, switch back to `local` and re-ingest.
 
@@ -464,18 +464,22 @@ Groq supports multiple models. See the full list at [console.groq.com/docs/model
 4. Add all `NEXT_PUBLIC_*` variables and `BACKEND_URL` in the Vercel Environment Variables UI.
 5. Deploy.
 
-### Backend → Railway
+### Backend → Render (or Railway)
 
-1. Go to [railway.app](https://railway.app) and create a new project.
-2. Connect your GitHub repo and set the **Root Directory** to `Backend`.
+1. Create a new **Web Service** and connect the GitHub repo.
+2. Set the **Root Directory** to `Backend`.
 3. Set the **Start Command** to:
    ```
    uvicorn main:app --host 0.0.0.0 --port $PORT
    ```
-4. Add all backend environment variables in the Railway Variables panel.
-5. Deploy. Railway will give you a public URL — set this as `BACKEND_URL` in your Vercel project and redeploy.
+4. Add all backend environment variables (`EMBEDDING_PROVIDER=local` is the right choice on a 512MB instance).
+5. Deploy. Copy the public URL (e.g. `https://your-service.onrender.com`) and set it as `BACKEND_URL` in your Vercel project, then redeploy the frontend.
 
-> **CORS:** After deploying the frontend, update `FRONTEND_URL` in your Railway backend variables to your Vercel production URL (e.g. `https://your-portfolio.vercel.app`). Redeploy the backend.
+> **Memory:** Keep `EMBEDDING_PROVIDER=local`. The FastEmbed/ONNX path is what makes the 512MB Render plan work. The old `sentence-transformers` + PyTorch stack uses well over 512MB and will crash the instance.
+>
+> **CORS:** After deploying the frontend, update `FRONTEND_URL` in your backend variables to your Vercel production URL (e.g. `https://your-portfolio.vercel.app`). Redeploy the backend.
+>
+> **Cold starts:** Render's free plan spins the service down after idle time. The first request after that can take 30–60s. The Vercel `/api/chat` route is allowed 120s so it can wait.
 
 ---
 
@@ -490,7 +494,7 @@ AI_Resume/
 │   ├── .env.example         # template for backend env vars
 │   ├── config.py            # loads and validates env vars
 │   ├── database.py          # Supabase client — insert & vector search
-│   ├── embeddings.py        # embeddings singleton — local MiniLM or HuggingFace API
+│   ├── embeddings.py        # embeddings singleton — FastEmbed MiniLM or HuggingFace API
 │   ├── ingest.py            # one-shot script to populate Supabase
 │   ├── main.py              # FastAPI app — /chat streaming endpoint
 │   ├── requirements.txt     # Python dependencies

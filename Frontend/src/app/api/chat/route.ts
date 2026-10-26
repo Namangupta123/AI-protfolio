@@ -1,7 +1,4 @@
 import { NextRequest } from "next/server";
-
-export const dynamic = "force-dynamic";
-export const runtime = "edge";
 import {
   GuardrailEngine,
   InjectionGuard,
@@ -10,7 +7,10 @@ import {
   DETECTION_PRESETS,
 } from "@llm-guardrails/core";
 
-const BACKEND_URL = process.env.BACKEND_URL;
+export const dynamic = "force-dynamic";
+export const maxDuration = 120;
+
+const BACKEND_URL = process.env.BACKEND_URL?.replace(/\/$/, "");
 const NAME= process.env.NEXT_PUBLIC_NAME;;
 
 const BLOCKED_MESSAGE =
@@ -100,6 +100,10 @@ export async function POST(req: NextRequest) {
     if (guard.blocked) {
       console.warn(`[guardrails] blocked by "${guard.guard}" — input: "${userText}"`);
       return blockedResponse();
+    }
+
+    if (!BACKEND_URL) {
+      return new Response("Backend is not configured.", { status: 503 });
     }
 
     // ── Forward to FastAPI RAG backend ───────────────────────────────────────

@@ -1,16 +1,34 @@
+import asyncio
 import json
-import os
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from groq import AsyncGroq
-from config import GROQ_API_KEY, FRONTEND_URL, SYSTEM_PROMPT_FILE
+from config import GROQ_API_KEY, FRONTEND_URL, get_system_prompt
 from embeddings import embed
 from database import match_documents
-from config import get_system_prompt
 
-app = FastAPI(title="AI Resume RAG API")
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    # Warm in the background so the process can bind $PORT before the model loads.
+    # Render kills services that don't listen within the start timeout.
+    async def _warm():
+        try:
+            await asyncio.to_thread(embed, "ok")
+            print("[startup] embeddings ready")
+        except Exception as exc:
+            print(f"[startup] embedding warmup failed: {exc}")
+
+    task = asyncio.create_task(_warm())
+    yield
+    task.cancel()
+
+
+app = FastAPI(title="AI Resume RAG API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -55,18 +73,15 @@ async def stream_groq(prompt: str, system_prompt: str):
             yield f"0:{json.dumps(delta)}\n"
 
 
-@app.post("/chat")
-async def chat(request: ChatRequest):
-    if not request.message.strip():
-        raise HTTPException(status_code=400, detail="Message cannot be empty.")
-
+async def rag_stream(user_message: str):
+    """Embed + retrieve inside the generator so HTTP headers go out immediately."""
     print(f"\n{'='*60}")
-    print(f"[RAG] Incoming query: {request.message!r}")
+    print(f"[RAG] Incoming query: {user_message!r}")
 
-    query_embedding = embed(request.message)
+    query_embedding = await asyncio.to_thread(embed, user_message)
     print(f"[RAG] Embedding generated (dim={len(query_embedding)})")
 
-    context_chunks = match_documents(query_embedding, top_k=8)
+    context_chunks = await asyncio.to_thread(match_documents, query_embedding, 8)
 
     print(f"[RAG] Retrieved {len(context_chunks)} chunk(s) from Supabase:")
     if context_chunks:
@@ -75,19 +90,27 @@ async def chat(request: ChatRequest):
             print(f"  {chunk[:300]}{'...' if len(chunk) > 300 else ''}")
     else:
         print("  [WARNING] No chunks returned — check Supabase RPC threshold or that ingest.py was run.")
-
-    if not context_chunks:
-        raise HTTPException(status_code=404, detail="No relevant context found in knowledge base.")
+        yield f"0:{json.dumps('No relevant context found in knowledge base.')}\n"
+        return
 
     system_prompt = get_system_prompt()
-    prompt = build_prompt(context_chunks, request.message)
+    prompt = build_prompt(context_chunks, user_message)
 
     print(f"\n[RAG] Final prompt sent to Groq:\n{'-'*60}")
     print(prompt)
     print(f"{'='*60}\n")
 
+    async for chunk in stream_groq(prompt, system_prompt):
+        yield chunk
+
+
+@app.post("/chat")
+async def chat(request: ChatRequest):
+    if not request.message.strip():
+        raise HTTPException(status_code=400, detail="Message cannot be empty.")
+
     return StreamingResponse(
-        stream_groq(prompt, system_prompt),
+        rag_stream(request.message),
         media_type="text/plain",
         headers={
             "X-Vercel-AI-Data-Stream": "v1",
