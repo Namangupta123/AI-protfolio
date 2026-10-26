@@ -86,7 +86,14 @@ export default function Home() {
 
   const [timestamps, setTimestamps] = useState<Record<string, number>>({});
 
-  const { messages, sendMessage, status, error, regenerate, setMessages } = useChat({
+  const {
+    messages,
+    sendMessage,
+    status,
+    error,
+    regenerate,
+    setMessages,
+  } = useChat({
     transport: new TextStreamChatTransport({ api: "/api/chat" }),
     id: chatId,
   });
@@ -227,6 +234,7 @@ export default function Home() {
             error={error}
             regenerate={regenerate}
             timestamps={timestamps}
+            setInput={setInput}
           />
         )}
       </main>

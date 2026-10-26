@@ -1,7 +1,7 @@
 "use client";
 
 import { UIMessage, isTextUIPart } from "ai";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bot, User, AlertCircle, RefreshCw } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -14,15 +14,27 @@ interface MessageListProps {
   error: Error | undefined;
   regenerate: () => void;
   timestamps: Record<string, number>;
+  setInput: Dispatch<SetStateAction<string>>;
 }
 
-export function MessageList({ messages, status, error, regenerate, timestamps }: MessageListProps) {
+export function MessageList({
+  messages,
+  status,
+  error,
+  regenerate,
+  timestamps,
+  setInput,
+}: MessageListProps) {
   const isWaiting = status === "submitted";
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
       <ScrollArea className="flex-1 px-3 sm:px-4 py-6 sm:py-8">
-        <div className="flex flex-col gap-6 sm:gap-8 max-w-2xl mx-auto" aria-live="polite" aria-atomic="false">
+        <div
+          className="flex flex-col gap-6 sm:gap-8 max-w-2xl mx-auto"
+          aria-live="polite"
+          aria-atomic="false"
+        >
           <AnimatePresence>
             {messages.map((msg, i) => (
               <ChatBubble
@@ -30,6 +42,8 @@ export function MessageList({ messages, status, error, regenerate, timestamps }:
                 message={msg}
                 timestamp={timestamps[msg.id]}
                 addTopMargin={i > 0 && messages[i - 1].role !== msg.role}
+                isLatestAssistantMessage={i === messages.length - 1 && msg.role === "assistant"}
+                setInput={setInput}
               />
             ))}
             {isWaiting && <TypingIndicator key="typing" />}
@@ -88,19 +102,47 @@ function formatTimestamp(ts: number): string {
   }).format(new Date(ts));
 }
 
+function extractSuggestions(content: string): string[] {
+  const match = content.match(/```json\s*([\s\S]*?)\s*```/i);
+  if (!match) return [];
+
+  try {
+    const parsed = JSON.parse(match[1]) as { suggestions?: unknown };
+    if (!parsed || typeof parsed !== "object") return [];
+    if (!Array.isArray(parsed.suggestions)) return [];
+
+    return parsed.suggestions
+      .filter((item): item is string => typeof item === "string")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+function stripSuggestionBlock(content: string): string {
+  return content.replace(/\n?```json\s*[\s\S]*?\s*```\s*$/i, "").trim();
+}
+
 function ChatBubble({
   message,
   timestamp,
   addTopMargin,
+  isLatestAssistantMessage,
+  setInput,
 }: {
   message: UIMessage;
   timestamp?: number;
   addTopMargin?: boolean;
+  isLatestAssistantMessage: boolean;
+  setInput: Dispatch<SetStateAction<string>>;
 }) {
   const isUser = message.role === "user";
   const textParts = message.parts.filter(isTextUIPart);
   const fullText = textParts.map((p) => p.text).join("");
-  const { displayed, isTyping } = useTypewriter(isUser ? "" : fullText, message.id);
+  const cleanText = isUser ? fullText : stripSuggestionBlock(fullText);
+  const suggestions = isUser ? [] : extractSuggestions(fullText);
+  const { displayed, isTyping } = useTypewriter(isUser ? "" : cleanText, message.id);
 
   return (
     <motion.div
@@ -110,7 +152,6 @@ function ChatBubble({
       transition={{ duration: 0.25, ease: "easeOut" }}
       className={`group flex items-end gap-3 ${isUser ? "flex-row-reverse" : "flex-row"} ${addTopMargin ? "mt-2" : ""}`}
     >
-      {/* Avatar */}
       <div
         className={`shrink-0 flex items-center justify-center w-7 h-7 rounded-full border ${
           isUser
@@ -121,7 +162,6 @@ function ChatBubble({
         {isUser ? <User className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
       </div>
 
-      {/* Card + timestamp stacked vertically */}
       <div className="flex flex-col min-w-0">
         <div className={`flex items-end gap-2 ${isUser ? "flex-row" : ""}`}>
           {isUser && timestamp && (
@@ -129,17 +169,14 @@ function ChatBubble({
               {formatTimestamp(timestamp)}
             </span>
           )}
-        <div
-          className={`max-w-[90%] sm:max-w-[80%] rounded-2xl text-sm leading-relaxed ${
-            isUser
-              ? "gradient-bg text-white px-4 py-3"
-              : "text-foreground px-1 py-1"
-          }`}
-        >
-          {isUser ? (
-            fullText
-          ) : (
-            isTyping ? (
+          <div
+            className={`max-w-[90%] sm:max-w-[80%] rounded-2xl text-sm leading-relaxed ${
+              isUser ? "gradient-bg text-white px-4 py-3" : "text-foreground px-1 py-1"
+            }`}
+          >
+            {isUser ? (
+              fullText
+            ) : isTyping ? (
               <span className="whitespace-pre-wrap">
                 {displayed}
                 <span className="inline-block w-px h-3.5 bg-violet-500 ml-0.5 animate-[blink_1s_step-end_infinite] align-middle" />
@@ -168,9 +205,7 @@ function ChatBubble({
                   ol: ({ children }) => (
                     <ol className="list-decimal list-inside space-y-0.5 my-1">{children}</ol>
                   ),
-                  strong: ({ children }) => (
-                    <strong className="font-semibold">{children}</strong>
-                  ),
+                  strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
                   a: ({ href, children }) => (
                     <a
                       href={href}
@@ -183,12 +218,26 @@ function ChatBubble({
                   ),
                 }}
               >
-                {fullText}
+                {cleanText}
               </ReactMarkdown>
-            )
-          )}
+            )}
+          </div>
         </div>
-        </div>
+
+        {!isUser && isLatestAssistantMessage && suggestions.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2 max-w-[90%] sm:max-w-[80%] px-1">
+            {suggestions.map((suggestion) => (
+              <button
+                key={suggestion}
+                type="button"
+                onClick={() => setInput(suggestion)}
+                className="rounded-full border border-border bg-secondary/60 px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-violet-400 hover:text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-950/30"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        )}
 
         {!isUser && timestamp && (
           <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-[10px] text-muted-foreground text-right mt-1 whitespace-nowrap">
@@ -199,7 +248,6 @@ function ChatBubble({
     </motion.div>
   );
 }
-
 
 function TypingIndicator() {
   return (

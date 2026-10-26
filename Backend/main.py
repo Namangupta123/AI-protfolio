@@ -40,7 +40,7 @@ QUESTION:
 
 async def stream_groq(prompt: str, system_prompt: str):
     stream = await groq_client.chat.completions.create(
-        model="meta-llama/llama-4-scout-17b-16e-instruct",
+        model="openai/gpt-oss-120b",
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt},
