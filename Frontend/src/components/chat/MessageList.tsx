@@ -1,7 +1,7 @@
 "use client";
 
 import { UIMessage, isTextUIPart } from "ai";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bot, User, AlertCircle, RefreshCw } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -14,7 +14,10 @@ interface MessageListProps {
   error: Error | undefined;
   regenerate: () => void;
   timestamps: Record<string, number>;
-  setInput: Dispatch<SetStateAction<string>>;
+  suggestions: string[];
+  suggestionsMessageId: string | null;
+  suggestionsLoading: boolean;
+  onSelectSuggestion: (text: string) => void;
 }
 
 export function MessageList({
@@ -23,7 +26,10 @@ export function MessageList({
   error,
   regenerate,
   timestamps,
-  setInput,
+  suggestions,
+  suggestionsMessageId,
+  suggestionsLoading,
+  onSelectSuggestion,
 }: MessageListProps) {
   const isWaiting = status === "submitted";
 
@@ -43,7 +49,9 @@ export function MessageList({
                 timestamp={timestamps[msg.id]}
                 addTopMargin={i > 0 && messages[i - 1].role !== msg.role}
                 isLatestAssistantMessage={i === messages.length - 1 && msg.role === "assistant"}
-                setInput={setInput}
+                suggestions={suggestionsMessageId === msg.id ? suggestions : []}
+                suggestionsLoading={suggestionsLoading}
+                onSelectSuggestion={onSelectSuggestion}
               />
             ))}
             {isWaiting && <TypingIndicator key="typing" />}
@@ -102,47 +110,31 @@ function formatTimestamp(ts: number): string {
   }).format(new Date(ts));
 }
 
-function extractSuggestions(content: string): string[] {
-  const match = content.match(/```json\s*([\s\S]*?)\s*```/i);
-  if (!match) return [];
-
-  try {
-    const parsed = JSON.parse(match[1]) as { suggestions?: unknown };
-    if (!parsed || typeof parsed !== "object") return [];
-    if (!Array.isArray(parsed.suggestions)) return [];
-
-    return parsed.suggestions
-      .filter((item): item is string => typeof item === "string")
-      .map((item) => item.trim())
-      .filter(Boolean);
-  } catch {
-    return [];
-  }
-}
-
-function stripSuggestionBlock(content: string): string {
-  return content.replace(/\n?```json\s*[\s\S]*?\s*```\s*$/i, "").trim();
-}
-
 function ChatBubble({
   message,
   timestamp,
   addTopMargin,
   isLatestAssistantMessage,
-  setInput,
+  suggestions,
+  suggestionsLoading,
+  onSelectSuggestion,
 }: {
   message: UIMessage;
   timestamp?: number;
   addTopMargin?: boolean;
   isLatestAssistantMessage: boolean;
-  setInput: Dispatch<SetStateAction<string>>;
+  suggestions: string[];
+  suggestionsLoading: boolean;
+  onSelectSuggestion: (text: string) => void;
 }) {
   const isUser = message.role === "user";
   const textParts = message.parts.filter(isTextUIPart);
   const fullText = textParts.map((p) => p.text).join("");
-  const cleanText = isUser ? fullText : stripSuggestionBlock(fullText);
-  const suggestions = isUser ? [] : extractSuggestions(fullText);
+  const cleanText = fullText;
   const { displayed, isTyping } = useTypewriter(isUser ? "" : cleanText, message.id);
+  // Show pills only once the typewriter has caught up with the full answer
+  const showSuggestions =
+    !isUser && isLatestAssistantMessage && !isTyping && (suggestionsLoading || suggestions.length > 0);
 
   return (
     <motion.div
@@ -224,18 +216,32 @@ function ChatBubble({
           </div>
         </div>
 
-        {!isUser && isLatestAssistantMessage && suggestions.length > 0 && (
+        {showSuggestions && (
           <div className="mt-3 flex flex-wrap gap-2 max-w-[90%] sm:max-w-[80%] px-1">
-            {suggestions.map((suggestion) => (
-              <button
-                key={suggestion}
-                type="button"
-                onClick={() => setInput(suggestion)}
-                className="rounded-full border border-border bg-secondary/60 px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-violet-400 hover:text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-950/30"
-              >
-                {suggestion}
-              </button>
-            ))}
+            {suggestions.length > 0
+              ? suggestions.map((suggestion, i) => (
+                  <motion.button
+                    key={suggestion}
+                    type="button"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25, delay: i * 0.07 }}
+                    onClick={() => onSelectSuggestion(suggestion)}
+                    className="rounded-full border border-border bg-secondary/60 px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-violet-400 hover:text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-950/30"
+                  >
+                    {suggestion}
+                  </motion.button>
+                ))
+              : [72, 104, 88].map((w, i) => (
+                  <motion.span
+                    key={i}
+                    aria-hidden="true"
+                    className="h-6 rounded-full border border-border bg-secondary/60"
+                    style={{ width: w }}
+                    animate={{ opacity: [0.4, 0.9, 0.4] }}
+                    transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.15 }}
+                  />
+                ))}
           </div>
         )}
 

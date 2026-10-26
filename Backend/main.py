@@ -5,11 +5,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from groq import AsyncGroq
 from config import GROQ_API_KEY, FRONTEND_URL, get_system_prompt
 from embeddings import embed
 from database import match_documents
+from suggestions import generate_suggestions
 
 
 @asynccontextmanager
@@ -43,6 +44,12 @@ groq_client = AsyncGroq(api_key=GROQ_API_KEY)
 
 class ChatRequest(BaseModel):
     message: str
+
+
+class SuggestRequest(BaseModel):
+    question: str = Field(max_length=500)
+    answer: str = Field(max_length=4000)
+    asked: list[str] = Field(default_factory=list, max_length=30)
 
 
 def build_prompt(context_chunks: list[str], user_message: str) -> str:
@@ -118,6 +125,16 @@ async def chat(request: ChatRequest):
             "X-Accel-Buffering": "no",
         },
     )
+
+
+@app.post("/suggestions")
+async def suggestions(request: SuggestRequest):
+    if not request.question.strip() or not request.answer.strip():
+        return {"suggestions": []}
+
+    asked = [q for q in request.asked if q.strip()]
+    result = await generate_suggestions(groq_client, request.question, request.answer, asked)
+    return {"suggestions": result}
 
 
 @app.get("/")
