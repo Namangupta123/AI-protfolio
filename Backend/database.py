@@ -11,6 +11,14 @@ def get_supabase() -> Client:
     return _client
 
 
+def clear_documents() -> int:
+    """Delete every row in `documents` so a re-ingest cannot mix stale chunks."""
+    client = get_supabase()
+    # PostgREST refuses a filter-less DELETE; bigserial ids are always >= 1.
+    result = client.table("documents").delete().gte("id", 0).execute()
+    return len(result.data or [])
+
+
 def insert_document(content: str, embedding: list[float]) -> None:
     client = get_supabase()
     client.table("documents").insert({

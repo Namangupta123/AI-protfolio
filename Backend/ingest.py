@@ -1,10 +1,10 @@
 """
-Run this script once to ingest resume.md into Supabase.
+Ingest knowledge_base.md into Supabase, replacing any previous chunks.
 Usage: python ingest.py
 """
 from pathlib import Path
 from langchain_text_splitters import MarkdownHeaderTextSplitter
-from database import insert_document
+from database import clear_documents, insert_document
 from embeddings import embed
 from config import KNOWLEDGE_BASE_FILE
 
@@ -29,14 +29,23 @@ def ingest(path: str = KNOWLEDGE_BASE_FILE) -> None:
         content = f"{breadcrumb}\n\n{doc.page_content}" if breadcrumb else doc.page_content
         final_chunks.append(content)
 
-    print(f"Ingesting {len(final_chunks)} chunks from {path} ...")
+    print(f"Embedding {len(final_chunks)} chunks from {path} ...")
 
+    # Embed first so a failed model/API call cannot wipe the live table.
+    rows: list[tuple[str, list[float]]] = []
     for i, chunk in enumerate(final_chunks):
         embedding = embed(chunk)
-        insert_document(chunk, embedding)
-        print(f"  [{i + 1}/{len(final_chunks)}] stored: {chunk[:60].strip()!r}")
+        rows.append((chunk, embedding))
+        print(f"  [{i + 1}/{len(final_chunks)}] embedded: {chunk[:60].strip()!r}")
 
-    print("Done. All chunks stored in Supabase.")
+    deleted = clear_documents()
+    print(f"Cleared {deleted} existing document(s). Writing {len(rows)} new chunk(s) ...")
+
+    for i, (chunk, embedding) in enumerate(rows):
+        insert_document(chunk, embedding)
+        print(f"  [{i + 1}/{len(rows)}] stored: {chunk[:60].strip()!r}")
+
+    print("Done. Knowledge base rewritten in Supabase.")
 
 
 if __name__ == "__main__":
